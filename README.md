@@ -28,9 +28,5 @@ qunjielong = Qunjielong(
 )
 qunjielong.token_with_cache().get_goods_detail()
 qunjielong.token_with_cache().get_ghome_info()
-qunjielong.token_with_cache().query_order_list_with_all()
-qunjielong.token_with_cache().query_order_list_with_forward()
-qunjielong.token_with_cache().query_order_list_with_reverse()
-qunjielong.token_with_cache().query_act_goods()
-qunjielong.token_with_cache().list_act_info()
+qunjielong.token_with_cache().request_with_token()
 ```
