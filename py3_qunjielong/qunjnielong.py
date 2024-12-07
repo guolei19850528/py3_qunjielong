@@ -107,8 +107,8 @@ class Qunjielong(object):
         kwargs = Dict(kwargs)
         kwargs.setdefault("response_handler", ResponseHandler.normal_handler)
         kwargs.setdefault("method", "get")
-        kwargs.setdefault("url","")
-        if not kwargs.get("url","").startswith("http"):
+        kwargs.setdefault("url", "")
+        if not kwargs.get("url", "").startswith("http"):
             kwargs["url"] = self.base_url + kwargs["url"]
         kwargs.setdefault("params", Dict())
         kwargs.params.setdefault("accessToken", self.access_token)
@@ -179,7 +179,9 @@ class Qunjielong(object):
         kwargs = Dict(kwargs)
         kwargs.setdefault("response_handler", ResponseHandler.normal_handler)
         kwargs.setdefault("method", "GET")
-        kwargs.setdefault("url", f"{RequestUrl.BASE_URL}{RequestUrl.TOKEN_URL}")
+        kwargs.setdefault("url", RequestUrl.TOKEN_URL)
+        if not kwargs.get("url", "").startswith("http"):
+            kwargs["url"] = self.base_url + kwargs["url"]
         kwargs.setdefault("params", Dict())
         kwargs.params.setdefault("secret", self.secret)
         result = py3_requests.request(**kwargs.to_dict())
