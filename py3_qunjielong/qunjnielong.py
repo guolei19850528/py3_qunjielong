@@ -19,47 +19,50 @@ from addict import Dict
 from jsonschema.validators import Draft202012Validator
 from requests import Response
 
-request_urls = Dict()
-request_urls.base = "https://openapi.qunjielong.com/"
-request_urls.get_ghome_info = "/open/api/ghome/getGhomeInfo"
-request_urls.token = "open/auth/token"
-request_urls.list_act_info = "/open/api/act/list_act_info"
-request_urls.query_act_goods = "/open/api/act_goods/query_act_goods"
-request_urls.get_goods_detail = "/open/api/goods/get_goods_detail"
-request_urls.forward_query_order_list = "/open/api/order/forward/query_order_list"
-request_urls.reverse_query_order_list = "/open/api/order/reverse/query_order_list"
-request_urls.all_query_order_list = "/open/api/order/all/query_order_list"
-request_urls.query_order_info = "/open/api/order/single/query_order_info"
 
-validator_json_schemas = Dict()
-validator_json_schemas.normal = Dict({
-    "type": "object",
-    "properties": {
-        "code": {
-            "oneOf": [
-                {"type": "integer", "const": 200},
-                {"type": "string", "const": 200},
-            ],
-        }
-    },
-    "required": ["code"],
-})
-validator_json_schemas.get_ghome_info = Dict({
-    "type": "object",
-    "properties": {
-        "ghId": {"type": "integer", "minimum": 1},
-    },
-    "required": ["ghId"]
-})
+class RequestUrl(py3_requests.RequestUrl):
+    BASE = "https://openapi.qunjielong.com/"
+    OPEN_API_GHOME_GETGHOMEINFO = "/open/api/ghome/getGhomeInfo"
+    OPEN_AUTH_TOKEN = "/open/auth/token"
+    OPEN_API_ACT_LIST_ACT_INFO = "/open/api/act/list_act_info"
+    OPEN_API_ACT_GOODS_QUERY_ACT_GOODS = "/open/api/act_goods/query_act_goods"
+    OPEN_API_GOODS_GET_GOODS_DETAIL = "/open/api/goods/get_goods_detail"
+    OPEN_API_ORDER_FORWARD_QUERY_ORDER_LIST = "/open/api/order/forward/query_order_list"
+    OPEN_API_ORDER_REVERSE_QUERY_ORDER_LIST = "/open/api/order/reverse/query_order_list"
+    OPEN_API_ORDER_ALL_QUERY_ORDER_LIST = "/open/api/order/all/query_order_list"
+    OPEN_API_ORDER_SINGLE_QUERY_ORDER_INFO = "/open/api/order/single/query_order_info"
 
 
-def normal_response_handler(response: Response = None):
-    if isinstance(response, Response) and response.status_code == 200:
-        json_addict = Dict(response.json())
-        if Draft202012Validator(validator_json_schemas.normal).is_valid(instance=json_addict):
+class ValidatorJsonSchemas(py3_requests.ValidatorJsonSchema):
+    SUCCESS = Dict({
+        "type": "object",
+        "properties": {
+            "code": {
+                "oneOf": [
+                    {"type": "integer", "const": 200},
+                    {"type": "string", "const": 200},
+                ],
+            }
+        },
+        "required": ["code"],
+    })
+
+    GETGHOMEINFO = Dict({
+        "type": "object",
+        "properties": {
+            "ghId": {"type": "integer", "minimum": 1},
+        },
+        "required": ["ghId"]
+    })
+
+
+class ResponseHandler(py3_requests.ResponseHandler):
+    @staticmethod
+    def success(response: Response = None):
+        json_addict = ResponseHandler.status_code_200_json_addict(response=response)
+        if Draft202012Validator(ValidatorJsonSchemas.SUCCESS).is_valid(instance=json_addict):
             return json_addict.get("data", None)
         return None
-    raise Exception(f"Response Handler Error {response.status_code}|{response.text}")
 
 
 class Qunjielong(object):
@@ -71,7 +74,7 @@ class Qunjielong(object):
 
     def __init__(
             self,
-            base_url: str = request_urls.base,
+            base_url: str = RequestUrl.BASE,
             secret: str = "",
             cache: Union[diskcache.Cache, redis.Redis, redis.StrictRedis] = None,
     ):
@@ -90,7 +93,7 @@ class Qunjielong(object):
 
     def request_with_token(self, **kwargs):
         kwargs = Dict(kwargs)
-        kwargs.setdefault("response_handler", normal_response_handler)
+        kwargs.setdefault("response_handler", ResponseHandler.success)
         kwargs.setdefault("method", "get")
         kwargs.setdefault("url", "")
         if not kwargs.get("url", "").startswith("http"):
@@ -99,7 +102,7 @@ class Qunjielong(object):
         kwargs.params.setdefault("accessToken", self.access_token)
         return py3_requests.request(**kwargs.to_dict())
 
-    def get_ghome_info(
+    def getGhomeInfo(
             self,
             **kwargs
     ):
@@ -112,14 +115,14 @@ class Qunjielong(object):
         """
         kwargs = Dict(kwargs)
         kwargs.setdefault("method", "GET")
-        kwargs.setdefault("url", request_urls.get_ghome_info)
+        kwargs.setdefault("url", RequestUrl.OPEN_API_GHOME_GETGHOMEINFO)
         return self.request_with_token(**kwargs.to_dict())
 
     def token_with_cache(
             self,
             expire: Union[float, int, timedelta] = None,
             token_kwargs: dict = {},
-            get_ghome_info_kwargs: dict = {}
+            getGhomeInfo_kwargs: dict = {}
     ):
         """
         access token with cache
@@ -132,8 +135,8 @@ class Qunjielong(object):
         if isinstance(self.cache, (diskcache.Cache, redis.Redis, redis.StrictRedis)):
             self.access_token = self.cache.get(cache_key)
 
-        if not Draft202012Validator(validator_json_schemas.get_ghome_info).is_valid(
-                self.get_ghome_info(**get_ghome_info_kwargs)
+        if not Draft202012Validator(ValidatorJsonSchemas.GETGHOMEINFO).is_valid(
+                self.getGhomeInfo(**Dict(getGhomeInfo_kwargs).to_dict())
         ):
             self.token(**token_kwargs)
             if isinstance(self.access_token, str) and len(self.access_token):
@@ -162,9 +165,9 @@ class Qunjielong(object):
         :return:
         """
         kwargs = Dict(kwargs)
-        kwargs.setdefault("response_handler", normal_response_handler)
+        kwargs.setdefault("response_handler", ResponseHandler.success)
         kwargs.setdefault("method", "GET")
-        kwargs.setdefault("url", request_urls.token)
+        kwargs.setdefault("url", RequestUrl.OPEN_AUTH_TOKEN)
         if not kwargs.get("url", "").startswith("http"):
             kwargs["url"] = self.base_url + kwargs["url"]
         kwargs.setdefault("params", Dict())

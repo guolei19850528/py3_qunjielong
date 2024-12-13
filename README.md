@@ -15,18 +15,21 @@ pip install py3_qunjielong
 ## Qunjielong
 ```python
 import os
-import unittest
 
 import diskcache
 
-from py3_qunjielong.qunjnielong import Qunjielong
+from py3_qunjielong.qunjnielong import Qunjielong, RequestUrl
 
 cache = diskcache.Cache(directory=os.path.join(os.getcwd(), "runtime", "diskcache", "default"))
 qunjielong = Qunjielong(
     secret="<secret>",
     cache=cache
 )
-qunjielong.token_with_cache().get_goods_detail()
-qunjielong.token_with_cache().get_ghome_info()
-qunjielong.token_with_cache().request_with_token()
+
+print(
+    qunjielong.token_with_cache().request_with_token(
+        method="GET",
+        url=f"{RequestUrl.OPEN_API_GHOME_GETGHOMEINFO}",
+    )
+)
 ```
