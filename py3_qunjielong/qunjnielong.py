@@ -94,7 +94,7 @@ class Qunjielong(object):
     def request_with_token(self, **kwargs):
         kwargs = Dict(kwargs)
         kwargs.setdefault("response_handler", ResponseHandler.success)
-        kwargs.setdefault("method", "get")
+        kwargs.setdefault("method", py3_requests.RequestMethod.GET)
         kwargs.setdefault("url", "")
         if not kwargs.get("url", "").startswith("http"):
             kwargs["url"] = self.base_url + kwargs["url"]
@@ -114,7 +114,7 @@ class Qunjielong(object):
         :return:
         """
         kwargs = Dict(kwargs)
-        kwargs.setdefault("method", "GET")
+        kwargs.setdefault("method", py3_requests.RequestMethod.GET)
         kwargs.setdefault("url", RequestUrl.OPEN_API_GHOME_GETGHOMEINFO)
         return self.request_with_token(**kwargs.to_dict())
 
@@ -166,7 +166,7 @@ class Qunjielong(object):
         """
         kwargs = Dict(kwargs)
         kwargs.setdefault("response_handler", ResponseHandler.success)
-        kwargs.setdefault("method", "GET")
+        kwargs.setdefault("method", py3_requests.RequestMethod.GET)
         kwargs.setdefault("url", RequestUrl.OPEN_AUTH_TOKEN)
         if not kwargs.get("url", "").startswith("http"):
             kwargs["url"] = self.base_url + kwargs["url"]
